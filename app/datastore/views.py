@@ -18,8 +18,6 @@ def ingest():
                 400 if anything wrong happens
     """
     print(request.json)
-    print(mongodb)
-    print(mongo_readings)
     data = {
         'eui': request.json.get('end_device_id'),
         'port': request.json.get('port'),
