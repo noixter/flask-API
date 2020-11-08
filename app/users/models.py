@@ -1,19 +1,17 @@
 from . import db
 from flask_login import UserMixin
+from flask_serialize import FlaskSerializeMixin
 
 
-class Role(db.Model):
+class Role(FlaskSerializeMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), nullable=False)
 
     def __str__(self):
         return '[{}] {}'.format(self.id, self.name)
 
-    def as_dict(self):
-        return {column.name: getattr(self, column.name) for column in self.__table__.columns}
 
-
-class Users(UserMixin, db.Model):
+class Users(UserMixin, FlaskSerializeMixin, db.Model):
     """Class Users, manage the general users
         extends UserMixin for implements flask-login
         add attributes: is_active, is_authenticated for manage session
@@ -28,14 +26,10 @@ class Users(UserMixin, db.Model):
     rol_id = db.Column(db.Integer, db.ForeignKey('role.id'), nullable=False)
     rol = db.relationship('Role', backref=db.backref('Users', lazy=True))
 
+    exclude_serialize_fields = ['is_anonymous', 'is_authenticated', 'is_active', 'password']
+
     def __str__(self):
         return '{} {}'.format(self.first_name, self.last_name)
-
-    def as_dict(self):
-        """
-            :returns a User object formatted to dict
-        """
-        return {column.name: getattr(self, column.name) for column in self.__table__.columns}
 
     def get_id(self):
         return self.user_id

@@ -2,7 +2,7 @@ from . import users
 from flask import request, jsonify, redirect, url_for
 from .models import Users
 from flask_login import login_user, current_user
-from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
+from flask_jwt_extended import create_access_token
 
 
 @users.route('/login', methods=['GET', 'POST'])
@@ -27,13 +27,6 @@ def login():
         return jsonify(message='Please log in with a valid user')
 
 
-@users.route('/index', endpoint='index', methods=['GET'])
-@jwt_required
-def users():
-    user_id = get_jwt_identity()
-    user = Users.query.filter_by(user_id=user_id).first()
-    return jsonify(first_name=user.first_name,
-                   last_name=user.last_name,
-                   email=user.email,
-                   position=user.position,
-                   rol=user.rol_id)
+@users.route('/get_user/<email>', endpoint='get_user', methods=['GET'])
+def users(email):
+    return Users.get_delete_put_post(prop_filters={'email': email})

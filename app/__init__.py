@@ -14,6 +14,7 @@ login_manager.login_view = 'users.login'
 db = SQLAlchemy()
 jwt = JWTManager()
 
+
 @login_manager.user_loader
 def load_user(user_id):
     user = Users.query.filter_by(user_id=user_id).first()
