@@ -1,4 +1,4 @@
-from . import datastore, db, client
+from . import datastore, db, client, broker
 from .models import Reading
 from flask import request, jsonify
 from sqlalchemy.exc import DataError, IntegrityError
@@ -25,16 +25,10 @@ def ingest():
         'payload': request.json.get('payload')
     }
 
-    reading = Reading(**data)  # create Reading object from json parse dict
-    try:
-        db.session.add(reading)
-        mongo_reading = mongo_readings.insert_one(data).inserted_id
-        print(mongo_reading)
-        del mongo_reading
-        db.session.commit()
-        return jsonify(message='added'), 200
-    except (DataError, IntegrityError):
-        print("data error")
+    reading = broker.send_task('main.lora_process', (data,))
+    if reading.ready():
+        return jsonify(message='Receive'), 200
+    else:
         return jsonify(error='Something goes wrong'), 400
 
 
