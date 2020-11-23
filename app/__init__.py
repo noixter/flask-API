@@ -6,7 +6,10 @@ from app.users.models import Users, Role
 from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
 from flask_jwt_extended import JWTManager
+from dotenv import load_dotenv
 
+
+load_dotenv()
 
 login_manager = LoginManager()
 login_manager.login_view = 'users.login'
