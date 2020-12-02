@@ -1,4 +1,3 @@
-from flask import request, jsonify
 from app import create_app
 from flask_login import current_user, login_required
 from flask_sqlalchemy import SQLAlchemy
