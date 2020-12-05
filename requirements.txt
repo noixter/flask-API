@@ -28,6 +28,7 @@ passlib==1.7.4
 permissive-dict==1.0.3
 prompt-toolkit==3.0.8
 psycopg2==2.8.6
+psycopg2-binary
 PyJWT==1.7.1
 pymongo==3.11.0
 python-dotenv==0.15.0
