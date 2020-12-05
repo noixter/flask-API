@@ -24,14 +24,14 @@ def ingest():
         'payload': request.json.get('payload')
     }
 
-    with broker:
-        simple_queue = broker.SimpleQueue('LORA')
-        simple_queue.put({'task': 'tasks.receive_messages',
-                          'id': gen_unique_id(),
-                          'args': [data]
-                          })
-        print(f'Sent: {data}')
-        simple_queue.close()
+    #with broker:
+    #    simple_queue = broker.SimpleQueue('LORA')
+    #    simple_queue.put({'task': 'tasks.receive_messages',
+    #                      'id': gen_unique_id(),
+    #                      'args': [data]
+    #                      })
+    #    print(f'Sent: {data}')
+    #    simple_queue.close()
 
     return jsonify(message='Receive'), 200
 
