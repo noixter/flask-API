@@ -8,8 +8,8 @@ load_dotenv()
 
 class Config:
     SECRET_KEY = 'mysecretkey'
-    DEBUG = True
-    ENV = 'development'
+    DEBUG = False
+    ENV = 'production'
     #SQLALCHEMY_DATABASE_URI = 'postgresql://{}:{}@{}:{}/{}'.format(os.getenv('DB_USER'), os.getenv('DB_PASS'),
     #                                                               os.getenv('DB_URL'), str(os.getenv('DB_PORT')),
     #                                                               os.getenv('DB_NAME'))
