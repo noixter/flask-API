@@ -18,6 +18,7 @@ Flask-Security-Too==3.4.4
 flask-serialize==1.4.0
 Flask-SQLAlchemy==2.4.4
 Flask-WTF==0.14.3
+gunicorn
 idna==2.10
 importlib-metadata==3.0.0
 itsdangerous==1.1.0
@@ -32,6 +33,7 @@ psycopg2-binary
 PyJWT==1.7.1
 pymongo==3.11.0
 python-dotenv==0.15.0
+python-decouple
 pytz==2020.4
 six==1.15.0
 speaklater==1.3
