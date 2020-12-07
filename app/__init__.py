@@ -21,9 +21,9 @@ def load_user(user_id):
     return user
 
 
-def create_app():
+def create_app(enviroment):
     app = Flask(__name__)
-    app.config.from_object(Config)
+    app.config.from_object(enviroment)
     with app.app_context():
         users_db.init_app(app)
         users_db.create_all()
