@@ -57,3 +57,9 @@ def get_user(user_id=None):
                 return jsonify(error='Not allowed to created users'), 401
         else:
             return jsonify(count=len(users.json), users=users.json), 200
+
+
+@users.errorhandler(404)
+def not_found(e):
+    print(type(e))
+    return jsonify(error='We have not fount what you looking for'), 404
