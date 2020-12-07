@@ -22,6 +22,7 @@ class DevelopmentConfig(Config):
 
 
 class ProductionConfig(Config):
+    SECRET_KEY = 'MVOBKNcr+abZqgdpZFa19zaVUSKpL9GNBaqTtRnX45U='
     DEBUG = False
     ENV = 'production'
     SQLALCHEMY_DATABASE_URI = config('DATABASE_URL', default='localhost')
