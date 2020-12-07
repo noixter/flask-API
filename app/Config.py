@@ -14,9 +14,11 @@ class DevelopmentConfig(Config):
     SECRET_KEY = 'mysecretkey'
     DEBUG = True
     ENV = 'development'
-    SQLALCHEMY_DATABASE_URI = 'postgresql://{}:{}@{}:{}/{}'.format(config('DB_USER'), config('DB_PASS'),
-                                                                   config('DB_URL'), config('DB_PORT'),
-                                                                   config('DB_NAME'))
+    SQLALCHEMY_DATABASE_URI = 'postgresql://{}:{}@{}:{}/{}'.format(config('DB_USER', default='postgres'),
+                                                                   config('DB_PASS', default='postgres'),
+                                                                   config('DB_URL', default='localhost'),
+                                                                   config('DB_PORT', default='5432'),
+                                                                   config('DB_NAME', default='users'))
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(days=1)
 
