@@ -33,11 +33,7 @@ psycopg2-binary
 PyJWT==1.7.1
 pymongo==3.11.0
 python-dotenv==0.15.0
-<<<<<<< HEAD
 python-decouple==3.3
-=======
-python-decouple
->>>>>>> 5e48390fa79397757e9f8c6e1e8f3eb8a9e868fd
 pytz==2020.4
 six==1.15.0
 speaklater==1.3
