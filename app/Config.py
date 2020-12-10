@@ -15,6 +15,7 @@ class DevelopmentConfig(Config):
                                                                    config('DB_URL', default='localhost'),
                                                                    config('DB_PORT', default='5432'),
                                                                    config('DB_NAME', default='postgres'))
+
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(days=1)
 
@@ -28,8 +29,6 @@ class ProductionConfig(Config):
                                                                    config('DB_URL', default='localhost'),
                                                                    config('DB_PORT', default='5432'),
                                                                    config('DB_NAME', default='postgres'))
-    SQLALCHEMY_TRACK_MODIFICATIONS = True
-    JWT_ACCESS_TOKEN_EXPIRES = timedelta(days=1)
 
 
 configs = {

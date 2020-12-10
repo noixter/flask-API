@@ -19,18 +19,18 @@ class Users(UserMixin, FlaskSerializeMixin, db.Model):
         extends UserMixin for implements flask-login
         add attributes: is_active, is_authenticated for manage session
     """
-
-    user_id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, unique=True, nullable=False)
     first_name = db.Column(db.String(50), nullable=False)
     last_name = db.Column(db.String(50), nullable=False)
     email = db.Column(db.String(50), unique=True, nullable=False)
-    password = db.Column(db.String(255))
+    password = db.Column(db.String(255), nullable=False)
     position = db.Column(db.String(80), nullable=True)
     rol_id = db.Column(db.Integer, db.ForeignKey('role.id'), nullable=False)
     rol = db.relationship('Role', backref=db.backref('Users', lazy=True))
 
     exclude_serialize_fields = ['is_anonymous', 'is_authenticated', 'is_active', 'password']
-    create_fields = ['user_id', 'first_name', 'last_name', 'email', 'password', 'position', 'rol_id']
+    create_fields = ['id', 'user_id', 'first_name', 'last_name', 'email', 'password', 'position', 'rol_id']
     update_fields = ['user_id', 'first_name', 'last_name', 'email', 'password', 'position', 'rol_id']
 
     def __str__(self):

@@ -12,4 +12,5 @@ broker = Connection('pyamqp://{}:{}@{}//'.format(config('USER_BROKER', default='
                                                  config('PASSWD_BROKER', default='guest'),
                                                  config('URL_BROKER', default='localhost:5672')))
 
+
 from . import views
