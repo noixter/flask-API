@@ -22,11 +22,11 @@ def login():
                 expires = datetime.timestamp(datetime.now() + timedelta(days=1))
                 return jsonify(user=user_to_login.email, access_token=access_token, expires=expires), 200
             else:
-                return jsonify(error='Username or password incorrect'), 403
+                return jsonify(error='Username or password incorrect'), 401
         else:
-            return jsonify(error='username does not exist'), 403
+            return jsonify(error='username does not exist'), 404
     else:
-        return jsonify(message='Please log in with a valid user'), 403
+        return jsonify(message='Please log in with a valid user'), 405
 
 
 @users.route('/logout')
