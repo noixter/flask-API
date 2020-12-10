@@ -1,5 +1,5 @@
 from flask import Flask
-from .Config import Config
+from .Config import configs
 from app.users import users, db as users_db
 from app.datastore import datastore, db as datastore_db
 from app.users.models import Users, Role
@@ -21,9 +21,9 @@ def load_user(user_id):
     return user
 
 
-def create_app():
+def create_app(enviroment):
     app = Flask(__name__)
-    app.config.from_object(Config)
+    app.config.from_object(enviroment)
     with app.app_context():
         users_db.init_app(app)
         users_db.create_all()

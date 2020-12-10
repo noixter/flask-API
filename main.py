@@ -1,8 +1,14 @@
 from app import create_app
 from flask_login import current_user, login_required
 from flask_sqlalchemy import SQLAlchemy
+from decouple import config
+from app.Config import configs
 
-api = create_app()
+enviroment = configs.get('development')
+if config('PRODUCTION', default=False):
+    enviroment = configs.get('production')
+
+api = create_app(enviroment)
 db = SQLAlchemy(api)
 
 
