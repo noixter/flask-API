@@ -1,4 +1,4 @@
-from . import datastore #broker
+from . import datastore, broker
 from flask import request, jsonify
 from flask_jwt_extended import jwt_required
 from celery.utils import gen_unique_id
@@ -24,14 +24,14 @@ def ingest():
         'payload': request.json.get('payload')
     }
 
-    #with broker:
-    #    simple_queue = broker.SimpleQueue('LORA')
-    #    simple_queue.put({'task': 'tasks.receive_messages',
-    #                      'id': gen_unique_id(),
-    #                      'args': [data]
-    #                      })
-    #    print(f'Sent: {data}')
-    #    simple_queue.close()
+    with broker:
+        simple_queue = broker.SimpleQueue('LORA')
+        simple_queue.put({'task': 'tasks.receive_messages',
+                          'id': gen_unique_id(),
+                          'args': [data]
+                          })
+        print(f'Sent: {data}')
+        simple_queue.close()
 
     return jsonify(message='Receive'), 200
 
