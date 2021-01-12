@@ -1,6 +1,6 @@
 from . import users
 from datetime import datetime, timedelta
-from flask import request, jsonify
+from flask import request, jsonify, session
 from .models import Users
 from flask_login import login_user, current_user, login_required, logout_user
 from flask_jwt_extended import create_access_token
@@ -12,6 +12,8 @@ def login():
         if current_user.is_authenticated:
             return jsonify(alert="Already login user", user=current_user.email)
         user = request.get_json()
+        if not user:
+            user = request.form
         email = user['email']
         password = user['password']
         user_to_login = Users.query.filter_by(email=email).first()
