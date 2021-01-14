@@ -1,7 +1,9 @@
 from . import db
 from flask import request
+from sqlalchemy.exc import IntegrityError
 from flask_login import UserMixin, current_user
 from flask_serialize import FlaskSerializeMixin
+from marshmallow_sqlalchemy import ModelSchema
 
 FlaskSerializeMixin.db = db
 
@@ -67,6 +69,38 @@ class Users(UserMixin, FlaskSerializeMixin, db.Model):
             raise Exception('Not Allowed delete yourself')
         else:
             raise Exception('Delete Not Allowed')
+
+    def create_object(self):
+        if current_user.rol_id == 1:
+            try:
+                db.session.add(self)
+            except IntegrityError:
+                raise Exception('User {} already exists'.format(self))
+            db.session.commit()
+        else:
+            raise Exception('No admin users can not delete')
+
+    def update_object(self, updated_fields):
+        if current_user.rol_id == 1 or current_user == self:
+            try:
+                self.update_from_dict(updated_fields)
+            except IntegrityError:
+                raise Exception('User does not exist')
+            db.session.commit()
+        else:
+            raise Exception('Not allowed to change this user')
+
+
+    def delete_user(self):
+        if current_user.rol_id == 1 or current_user != self:
+            try:
+                db.session.delete(self)
+            except IntegrityError:
+                raise Exception('User {} can not be deleted'.format(self))
+            db.session.commit()
+        else:
+            raise Exception('No admin users can not delete')
+
 
 
 

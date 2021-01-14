@@ -1,6 +1,6 @@
 from flask import Flask
 from .Config import configs
-from app.users import users, db as users_db
+from app.users import users, ma, db as users_db
 from app.datastore import datastore, db as datastore_db
 from app.users.models import Users, Role
 from flask_login import LoginManager
@@ -26,6 +26,7 @@ def create_app(enviroment):
     app.config.from_object(enviroment)
     with app.app_context():
         users_db.init_app(app)
+        ma.init_app(app)
         users_db.create_all()
         datastore_db.init_app(app)
         datastore_db.create_all()

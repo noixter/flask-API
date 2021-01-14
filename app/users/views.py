@@ -1,9 +1,63 @@
-from . import users
+from . import users, api
 from datetime import datetime, timedelta
-from flask import request, jsonify, session
+from flask import request, jsonify
+from flask_restplus import Resource
+from marshmallow import ValidationError
 from .models import Users
+from .serializers import UserSerializer, UserPostSerializer
 from flask_login import login_user, current_user, login_required, logout_user
 from flask_jwt_extended import create_access_token
+
+
+@api.route('/get_user')
+@api.route('/get_user/<int:user_id>')
+class User(Resource):
+    method_decorators = [login_required]
+    user_serializer = UserSerializer()
+
+    def get(self, user_id=None):
+        if user_id:
+            user = Users.query.filter_by(id=user_id).first()
+            result = self.user_serializer.dump(user)
+            return result, 200
+        else:
+            users = Users.query.all()
+            result = self.user_serializer.dump(users, many=True)
+            return {'count': len(result), 'users': result}, 200
+
+    def post(self):
+        if current_user.rol_id == 1:
+            self.user_serializer = UserPostSerializer()
+            user_data = request.get_json(force=True)
+            try:
+                user_serialize = Users(**self.user_serializer.load(user_data))
+            except ValidationError as e:
+                return e.messages, 400
+            user_serialize.create_object()
+            return {'message': 'created'}, 201
+        else:
+            return {'error': 'Not allowed to create new Users'}, 403
+
+    def put(self, user_id):
+        user_to_update = Users.query.get(user_id)
+        update_fields = request.get_json(force=True)
+        try:
+            serialize_update_fields = self.user_serializer.load(update_fields, partial=True)
+            user_to_update.update_object(serialize_update_fields)
+            return {'message': 'updated'}, 200
+        except ValidationError as e:
+            return e.messages, 400
+
+    def delete(self, user_id):
+        user_to_delete = Users.query.filter_by(id=user_id).first()
+        if not user_to_delete:
+            return {'error': 'User does not exists'}, 400
+        user_serialize = self.user_serializer.dump(user_to_delete)
+        user_to_delete.delete_user()
+        return {'message': 'deleted', 'user': user_serialize}, 200
+
+
+
 
 
 @users.route('/login', methods=['GET', 'POST'])
@@ -59,6 +113,14 @@ def get_user(user_id=None):
                 return jsonify(error='Not allowed to created users'), 401
         else:
             return jsonify(count=len(users.json), users=users.json), 200
+
+
+@users.route('/serializer', methods=['GET'])
+def user_serializer():
+    users_serializer = UserSerializer()
+    users = Users.query.all()
+    result = users_serializer.dump(users, many=True)
+    return jsonify(count=len(result), users=result), 200
 
 
 @users.errorhandler(404)
