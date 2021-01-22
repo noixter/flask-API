@@ -1,56 +1,53 @@
 import re
 from . import ma
-from .models import Users
-from marshmallow import fields, validates, ValidationError
+from .models import Users, Role
+from marshmallow import fields, validates, ValidationError, post_load
 
 regex_names = r'[\W]'
 
+
+class RoleSerializer(ma.SQLAlchemyAutoSchema):
+
+    class Meta:
+        model = Role
+        include_fk = False
+
+
 class UserSerializer(ma.SQLAlchemyAutoSchema):
 
-    context = {}
-    first_name = fields.String()
-    last_name = fields.String()
-
-    class Meta:
-        model = Users
-        include_fk = True
-        fields = ('id', 'first_name', 'last_name', 'email', 'rol_id', 'position')
-
-    def __init__(self):
-        super(UserSerializer, self).__init__()
-        print(self.context)
-        try:
-            if self.context['request'].method == 'POST':
-                self.fields += 'password'
-                self.fields += 'user_id'
-        except KeyError:
-            print('Sin request')
-
-    @validates('first_name')
-    def validate_first_name(self, first_name):
-        if re.search(regex_names, first_name):
-            raise ValidationError('No allowed metacaracters on string ')
-
-    @validates('last_name')
-    def validate_last_name(self, last_name):
-        if re.search(regex_names, last_name):
-            raise ValidationError('No allowed metacaracters on string ')
-
-
-class UserPostSerializer(ma.SQLAlchemyAutoSchema):
-
     email = fields.Email()
+    rol = fields.Nested(RoleSerializer(only=["name"]))
 
     class Meta:
         model = Users
         include_fk = True
+        ordered = True
 
     @validates('first_name')
     def validate_first_name(self, first_name):
         if re.search(regex_names, first_name):
             raise ValidationError('No allowed metacaracters on string ')
+        return first_name.lower().capitalize()
 
     @validates('last_name')
     def validate_last_name(self, last_name):
         if re.search(regex_names, last_name):
             raise ValidationError('No allowed metacaracters on string ')
+        return last_name.lower().capitalize()
+
+    @post_load
+    def change_rol_id(self, data, **kwargs):
+        if data.get('rol') is not None:
+            try:
+                rol_name = data['rol'].get('name').lower().capitalize()
+            except AttributeError:
+                raise ValidationError('Missing data for rol', 'rol')
+            rol = Role.query.filter_by(name=rol_name).first()
+            if rol:
+                data['rol_id'] = rol.id
+                data.pop('rol')
+                return data
+            else:
+                raise ValidationError('Rol not found', 'rol')
+        else:
+            return data
