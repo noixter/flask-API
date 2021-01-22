@@ -15,7 +15,6 @@ Flask-Login==0.5.0
 Flask-Mail==0.9.1
 Flask-Principal==0.4.0
 Flask-Security-Too==3.4.4
-flask-serialize==1.4.0
 Flask-SQLAlchemy==2.4.4
 Flask-WTF==0.14.3
 gunicorn
@@ -46,3 +45,4 @@ zipp==3.4.0
 marshmallow-sqlalchemy==0.24.1
 flask-marshmallow
 flask-restplus
+marshmallow
