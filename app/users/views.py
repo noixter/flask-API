@@ -1,18 +1,24 @@
-from . import users, api
+from . import api
 from datetime import datetime, timedelta
-from flask import request, jsonify
+from flask import request
 from flask_restplus import Resource
 from marshmallow import ValidationError
-from .models import Users
+from .models import Users, BlacklistToken
 from .serializers import UserSerializer
-from flask_login import login_user, current_user, login_required, logout_user
-from flask_jwt_extended import create_access_token
+from flask_jwt_extended import (
+    create_access_token, get_jwt_identity, jwt_required,
+    get_raw_jwt
+)
 
 
 @api.route('/')
 @api.route('/<int:user_id>')
 class User(Resource):
-    method_decorators = [login_required]
+    """Users Resource}
+    methods: GET, POST, PUT, DELETE
+    """
+
+    method_decorators = [jwt_required]
     print_serialize_fields = ['id', 'first_name', 'last_name', 'email', 'rol', 'position']
     user_serializer = UserSerializer(only=print_serialize_fields)
 
@@ -27,6 +33,7 @@ class User(Resource):
             return {'count': len(result), 'users': result}, 200
 
     def post(self):
+        current_user = Users.query.filter_by(user_id=get_jwt_identity()).first()
         if current_user.rol_id == 1:
             self.user_serializer = UserSerializer()
             user_data = request.get_json(force=True)
@@ -43,6 +50,7 @@ class User(Resource):
             return {'code': 403, 'error': 'Not allowed to create new Users'}, 403
 
     def put(self, user_id):
+        current_user = Users.query.filter_by(user_id=get_jwt_identity()).first()
         user_to_update = Users.query.get(user_id)
         if not user_to_update:
             return {'code': 400, 'error': 'User does not exists'}, 400
@@ -58,6 +66,7 @@ class User(Resource):
             return {'code': 403, 'error': 'Not allowed to change this user'}, 403
 
     def delete(self, user_id):
+        current_user = Users.query.filter_by(user_id=get_jwt_identity()).first()
         user_to_delete = Users.query.get(user_id)
         if not user_to_delete:
             return {'code': 400, 'error': 'User does not exists'}, 400
@@ -67,39 +76,49 @@ class User(Resource):
             return {'code': 200, 'message': 'deleted', 'user': user_serialize}, 200
 
 
-@users.route('/login', methods=['GET', 'POST'])
-def login():
-    if request.method == 'POST':
-        if current_user.is_authenticated:
-            return jsonify(alert="Already login user", user=current_user.email)
-        user = request.get_json()
-        if not user:
-            user = request.form
-        email = user['email']
-        password = user['password']
-        user_to_login = Users.query.filter_by(email=email).first()
-        if user_to_login:
-            if user_to_login.password == password:
-                login_user(user_to_login)
-                access_token = create_access_token(identity=user_to_login.user_id)
-                expires = datetime.timestamp(datetime.now() + timedelta(days=1))
-                return jsonify(user=user_to_login.email, access_token=access_token, expires=expires), 200
+@api.route('/login')
+class Login(Resource):
+    """Resource for create a token given a specific user throw Login View"""
+
+    user_serializer = UserSerializer(only=['email', 'password'])
+
+    def post(self):
+        user = request.get_json(force=True)
+        if user:
+            try:
+                user_serialize = self.user_serializer.load(user, partial=True)
+            except ValidationError as e:
+                return {'code': 400, 'errors': e.messages}, 400
+            user_to_login = Users.query.filter_by(email=user_serialize.get('email')).first()
+            if user_to_login:
+                if user_to_login.password == user.get('password'):
+                    access_token = create_access_token(identity=user_to_login.user_id)
+                    expires = datetime.timestamp(datetime.now() + timedelta(days=1))
+                    return {'user': user_to_login.email, 'access_token': access_token, 'expires': expires}, 200
+                else:
+                    return {'code': 401, 'error': 'Username or password incorrect'}, 401
             else:
-                return jsonify(error='Username or password incorrect'), 401
+                return {'code': 400, 'error': 'username does not exist'}, 400
         else:
-            return jsonify(error='username does not exist'), 404
-    else:
-        return jsonify(message='Please log in with a valid user'), 405
+            return {'code': 400, 'error': 'No username or password to authenticate'}, 400
 
 
-@users.route('/logout')
-@login_required
-def logout():
-    logout_user()
-    return jsonify({"message": "User logout"}), 200
+@api.route('/logout')
+class Logout(Resource):
+    """Resource for revoked token access throw a LogOut view"""
+
+    method_decorators = [jwt_required]
+
+    def get(self):
+        current_user = Users.query.filter_by(user_id=get_jwt_identity()).first()
+        access_token = get_raw_jwt()
+        token_blacklisted = {
+            'token': access_token['jti'],
+            'expires': BlacklistToken().transform_expires_to_date(access_token['exp']),
+            'user_id': access_token['identity']
+        }
+        token = BlacklistToken(**token_blacklisted)
+        token.add()
+        return {'code': 200, 'message': 'Successfully logout user {}'.format(current_user.email)}, 200
 
 
-@users.errorhandler(404)
-def not_found(e):
-    print(type(e))
-    return jsonify(error='We have not fount what you looking for'), 404

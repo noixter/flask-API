@@ -1,10 +1,14 @@
 from . import db
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import FlushError
-from flask_login import UserMixin
+from datetime import datetime
 
 
 class Role(db.Model):
+    """Class Role
+    @params: id autoincremental
+    @params: name String
+    """
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String, nullable=False)
@@ -13,11 +17,8 @@ class Role(db.Model):
         return '[{}] {}'.format(self.id, self.name)
 
 
-class Users(UserMixin, db.Model):
-    """Class Users, manage the general users
-        extends UserMixin for implements flask-login
-        add attributes: is_active, is_authenticated for manage session
-    """
+class Users(db.Model):
+    """Class Users, manage the general users"""
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, unique=True, nullable=False)
     first_name = db.Column(db.String(50), nullable=False)
@@ -31,8 +32,7 @@ class Users(UserMixin, db.Model):
     def __str__(self):
         return '{} {}'.format(self.first_name, self.last_name)
 
-    def get_id(self):
-        return self.user_id
+    # Helpers methods to manage db access
 
     def create_object(self):
         try:
@@ -54,9 +54,25 @@ class Users(UserMixin, db.Model):
         db.session.commit()
 
 
+class BlacklistToken(db.Model):
+    """Token blacklisted model"""
 
+    id = db.Column(db.Integer, primary_key=True)
+    token = db.Column(db.String(255), nullable=False)
+    expires = db.Column(db.Date, nullable=False)
+    user_id = db.Column(db.Integer, nullable=False)
 
+    def __str__(self):
+        return '[{}]: {} > {}'.format(self.id, self.user_id, self.expires)
 
+    @staticmethod
+    def transform_expires_to_date(expires):
+        return datetime.fromtimestamp(expires)
 
+    # Manage add to db a token
+
+    def add(self):
+        db.session.add(self)
+        db.session.commit()
 
 

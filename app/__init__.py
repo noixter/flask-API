@@ -1,24 +1,25 @@
+from . import *
 from flask import Flask
 from .Config import configs
 from app.users import users, ma, db as users_db
+from app.users.models import BlacklistToken
 from app.datastore import datastore, db as datastore_db
-from app.users.models import Users, Role
-from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
 from flask_jwt_extended import JWTManager
 
-
-login_manager = LoginManager()
-login_manager.login_view = 'users.login'
 
 db = SQLAlchemy()
 jwt = JWTManager()
 
 
-@login_manager.user_loader
-def load_user(user_id):
-    user = Users.query.filter_by(user_id=user_id).first()
-    return user
+# Function callback to evaluate if a token has been revoked
+@jwt.token_in_blacklist_loader
+def check_blacklisted_token(token):
+    blacklisted_token = BlacklistToken.query.filter_by(token=token.get('jti')).first()
+    if blacklisted_token:
+        return True
+    else:
+        return False
 
 
 def create_app(enviroment):
@@ -30,7 +31,6 @@ def create_app(enviroment):
         users_db.create_all()
         datastore_db.init_app(app)
         datastore_db.create_all()
-    login_manager.init_app(app)
     jwt.init_app(app)
     app.register_blueprint(users)
     app.register_blueprint(datastore)

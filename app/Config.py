@@ -18,6 +18,8 @@ class DevelopmentConfig(Config):
 
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(days=1)
+    JWT_BLACKLIST_ENABLED = True
+    JWT_BLACKLIST_TOKEN_CHECKS = ['access']
 
 
 class ProductionConfig(Config):
@@ -29,6 +31,8 @@ class ProductionConfig(Config):
                                                                    config('DB_URL', default='localhost'),
                                                                    config('DB_PORT', default='5432'),
                                                                    config('DB_NAME', default='postgres'))
+    JWT_BLACKLIST_ENABLED = True
+    JWT_BLACKLIST_TOKEN_CHECKS = ['access']
 
 
 configs = {
