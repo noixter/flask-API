@@ -9,7 +9,6 @@ enviroment = configs.get('development')
 if config('PRODUCTION', default=False):
     enviroment = configs.get('production')
 
-
 api = create_app(enviroment)
 db = SQLAlchemy(api)
 
@@ -17,7 +16,7 @@ db = SQLAlchemy(api)
 @api.route('/', methods=['GET'])
 def index():
     return jsonify(message='Welcome, this is a Users API controller',
-                   routes_available='/users , /users/login, /users/logout'), 200
+                   routes_availables='/users , /users/login, /users/logout'), 200
 
 
 if __name__ == '__main__':

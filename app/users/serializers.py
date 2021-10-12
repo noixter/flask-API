@@ -37,17 +37,20 @@ class UserSerializer(ma.SQLAlchemyAutoSchema):
 
     @post_load
     def change_rol_id(self, data, **kwargs):
-        if data.get('rol') is not None:
-            try:
-                rol_name = data['rol'].get('name').lower().capitalize()
-            except AttributeError:
-                raise ValidationError('Missing data for rol', 'rol')
-            rol = Role.query.filter_by(name=rol_name).first()
-            if rol:
-                data['rol_id'] = rol.id
-                data.pop('rol')
-                return data
-            else:
-                raise ValidationError('Rol not found', 'rol')
-        else:
+        if not data.get('rol'):
             return data
+
+        try:
+            rol_name = data['rol'].get('name').lower().capitalize()
+        except AttributeError:
+            raise ValidationError('Missing data for rol', 'rol')
+
+        rol = Role.query.filter_by(name=rol_name).first()
+
+        if not rol:
+            raise ValidationError('Rol not found', 'rol')
+
+        data['rol_id'] = rol.id
+        data.pop('rol')
+
+        return data

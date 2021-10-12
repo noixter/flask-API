@@ -3,7 +3,6 @@ from flask import Flask
 from .Config import configs
 from app.users import users, ma, db as users_db
 from app.users.models import BlacklistToken
-from app.datastore import datastore, db as datastore_db
 from flask_sqlalchemy import SQLAlchemy
 from flask_jwt_extended import JWTManager
 
@@ -29,10 +28,7 @@ def create_app(enviroment):
         users_db.init_app(app)
         ma.init_app(app)
         users_db.create_all()
-        datastore_db.init_app(app)
-        datastore_db.create_all()
     jwt.init_app(app)
     app.register_blueprint(users)
-    app.register_blueprint(datastore)
     return app
 
