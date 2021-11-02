@@ -3,7 +3,7 @@ from . import ma
 from .models import Users, Role
 from marshmallow import fields, validates, ValidationError, post_load
 
-regex_names = r'[\W]'
+regex_names = r'[\W\d]'
 
 
 class RoleSerializer(ma.SQLAlchemyAutoSchema):
@@ -26,13 +26,13 @@ class UserSerializer(ma.SQLAlchemyAutoSchema):
     @validates('first_name')
     def validate_first_name(self, first_name):
         if re.search(regex_names, first_name):
-            raise ValidationError('No allowed metacaracters on string ')
+            raise ValidationError('No allowed metacaracters or digits on string ')
         return first_name.lower().capitalize()
 
     @validates('last_name')
     def validate_last_name(self, last_name):
         if re.search(regex_names, last_name):
-            raise ValidationError('No allowed metacaracters on string ')
+            raise ValidationError('No allowed metacaracters or digits on string ')
         return last_name.lower().capitalize()
 
     @post_load

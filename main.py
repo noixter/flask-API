@@ -15,7 +15,7 @@ db = SQLAlchemy(api)
 
 @api.route('/', methods=['GET'])
 def index():
-    return jsonify(message='Welcome, this is a Users API controller',
+    return jsonify(message='Welcome, this is a Users API',
                    routes_availables='/users , /users/login, /users/logout'), 200
 
 

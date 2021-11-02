@@ -1,6 +1,4 @@
 from . import db
-from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm.exc import FlushError
 from datetime import datetime
 
 
@@ -30,27 +28,6 @@ class Users(db.Model):
 
     def __str__(self):
         return '{} {}'.format(self.first_name, self.last_name)
-
-    # Helpers methods to manage db access
-
-    def create_object(self):
-        try:
-            db.session.add(self)
-        except (IntegrityError, FlushError):
-            raise Exception('User {} already exists'.format(self))
-        db.session.commit()
-
-    def update_object(self, updated_fields):
-        for field in updated_fields:
-            setattr(self, field, updated_fields[field])
-        db.session.commit()
-
-    def delete_user(self):
-        try:
-            db.session.delete(self)
-        except IntegrityError:
-            raise Exception('User {} can not be deleted'.format(self))
-        db.session.commit()
 
 
 class BlacklistToken(db.Model):
