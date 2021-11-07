@@ -1,0 +1,17 @@
+version: "3.8"
+
+services:
+  db:
+    image: postgres
+
+  web:
+    build: .
+    environment:
+      - SECRET_KEY=abcdefg123456
+      - DB_URL=db
+    depends_on:
+      - db
+    ports:
+      - "5000:5000"
+    volumes:
+      - .:/opt/flask_api
