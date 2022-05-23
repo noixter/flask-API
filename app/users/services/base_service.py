@@ -1,36 +1,20 @@
 from abc import ABC, abstractmethod
-from typing import Union
+from typing import Optional
 
-from app.users.models import Users
+from flask import Request
+
+from app.users.models import User
 
 
 class UserServices(ABC):
 
     @abstractmethod
-    def retrieve_user(self, pk: int) -> Union[Users, dict]:
-        """retrieve a single user object"""
+    def create_access_token(self, user_id: int):
+        """Create a user access token"""
+
+
+class AuthServices(ABC):
 
     @abstractmethod
-    def list_users(self):
-        """Get all saved users"""
-
-    @abstractmethod
-    def create_object(self, user_data: dict) -> dict:
-        """Create a user object"""
-
-    @abstractmethod
-    def modify_user(self, pk: int, update_fields: dict) -> Users:
-        """Patch a single user object""" 
-    
-    @abstractmethod
-    def delete_user(self, pk: int):
-        """Delete a single user object"""
-
-    @abstractmethod
-    def login(self, params: dict) -> dict:
-        """Login a user object a retrieve its access token"""
-
-    @abstractmethod
-    def logout(self) -> dict:
-        """logout a user"""
-
+    def validate(self, request: Optional[Request] = None) -> User:
+        """Validate an existing token or credentials"""

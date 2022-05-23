@@ -1,6 +1,6 @@
 import re
 from . import ma
-from .models import Users, Role
+from .models import User, Role
 from marshmallow import fields, validates, ValidationError, post_load
 
 regex_names = r'[\W\d]'
@@ -19,7 +19,7 @@ class UserSerializer(ma.SQLAlchemyAutoSchema):
     rol = fields.Nested(RoleSerializer(only=["name"]))
 
     class Meta:
-        model = Users
+        model = User
         include_fk = True
         ordered = True
 

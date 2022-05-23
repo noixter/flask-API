@@ -1,12 +1,7 @@
 from . import db
-from datetime import datetime
 
 
 class Role(db.Model):
-    """Class Role
-    @params: id autoincremental
-    @params: name String
-    """
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String, nullable=False)
@@ -15,8 +10,7 @@ class Role(db.Model):
         return '[{}] {}'.format(self.id, self.name)
 
 
-class Users(db.Model):
-    """Class Users, manage the general users"""
+class User(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     first_name = db.Column(db.String(50), nullable=False)
@@ -28,27 +22,3 @@ class Users(db.Model):
 
     def __str__(self):
         return '{} {}'.format(self.first_name, self.last_name)
-
-
-class BlacklistToken(db.Model):
-    """Token blacklisted model"""
-
-    id = db.Column(db.Integer, primary_key=True)
-    token = db.Column(db.String(255), nullable=False)
-    expires = db.Column(db.Date, nullable=False)
-    user_id = db.Column(db.Integer, nullable=False)
-
-    def __str__(self):
-        return '[{}]: {} > {}'.format(self.id, self.user_id, self.expires)
-
-    @staticmethod
-    def transform_expires_to_date(expires):
-        return datetime.fromtimestamp(expires)
-
-    # Manage add to db a token
-
-    def add(self):
-        db.session.add(self)
-        db.session.commit()
-
-

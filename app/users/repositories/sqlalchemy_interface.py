@@ -1,61 +1,62 @@
-from typing import Union
-from app.users.repositories.base_interface import UserRepositorie
+from typing import Dict, Any, List, Optional
+from app.users.repositories.base_interface import UserRepository
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm.exc import FlushError, NoResultFound
+from sqlalchemy.orm.exc import FlushError
 
-from app.users.models import Users
+from app.users.models import User
 
-from datetime import datetime, timedelta
 
-from flask_jwt_extended import create_access_token
-
-class SQLAlchemyUser(UserRepositorie):
+class SQLAlchemyUserRepository(UserRepository):
 
     def __init__(self, db: SQLAlchemy):
         self.db = db
 
-    def get_user(self, pk: int) -> Union[Users, dict]:
-        try:
-            user = Users.query.get(pk)
+    def get(self, pk: int) -> Optional[User]:
+        user = User.query.get(pk)
+        if not user:
+            return None
+        return user
+
+    def list(self) -> List[User]:
+        return User.query.all()
+
+    def add(self, data: Dict[str, Any]) -> User:
+        user = self.filter_by_email(email=data.get('email', ''))
+        if not user:
+            user = User(**data)
+            try:
+                self.db.session.add(user)
+            except (IntegrityError, FlushError):
+                raise Exception(f'User {user.email} already exists')
+            self.db.session.commit()
             return user
-        except NoResultFound:
-            return {}
+        return user
 
-    def filter_by_email(self, email: str) -> Union[Users, dict]:
-        try:
-            user = Users.query.filter_by(email=email).first()
+    def modify(
+        self, pk: int,
+        update_fields: Dict[str, Any]
+    ) -> Optional[User]:
+        user = self.get(pk=pk)
+        if user:
+            for field in update_fields:
+                if not hasattr(user, field):
+                    continue
+                setattr(user, field, update_fields[field])
+            self.db.session.commit()
             return user
-        except NoResultFound:
-            return {}
 
-    def list_users(self) -> list:
-        users = Users.query.all()
-        if not users:
-            return []
-        return users
+    def delete(self, pk: int) -> None:
+        user = self.get(pk=pk)
+        if not user:
+            try:
+                self.db.session.delete(user)
+            except IntegrityError:
+                raise f'User {user.email} can not be deleted'
+            self.db.session.commit()
 
-    def create_object(self, user_data: dict):
-        try:
-            user = Users(**user_data)
-            self.db.session.add(user)
-        except (IntegrityError, FlushError):
-            raise Exception(f'User {user.email} already exists')
-        self.db.session.commit()
-
-    def update_object(self, user: Users, updated_fields):
-        for field in updated_fields:
-            setattr(user, field, updated_fields[field])
-        self.db.session.commit()
-
-    def delete_object(self, user: Users):
-        try:
-            self.db.session.delete(user)
-        except IntegrityError:
-            raise Exception(f'User {user.email} can not be deleted')
-        self.db.session.commit()
-
-    def create_access_token(self, user: Users):
-        access_token = create_access_token(identity=user.id)
-        expires = datetime.timestamp(datetime.now() + timedelta(days=1))
-        return {'access_token': access_token, 'expires': expires}
+    def filter_by_email(self, email: str) -> Optional[User]:
+        user = User.query.filter_by(email=email).first()
+        if not user:
+            return None
+        return user

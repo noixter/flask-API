@@ -1,16 +1,14 @@
 from app import create_app
 from flask import jsonify
-from flask_sqlalchemy import SQLAlchemy
 from decouple import config
 from app.Config import configs
 
 
-enviroment = configs.get('development')
+environment = configs.get('development')
 if config('PRODUCTION', default=False):
-    enviroment = configs.get('production')
+    environment = configs.get('production')
 
-api = create_app(enviroment)
-db = SQLAlchemy(api)
+api = create_app(environment)
 
 
 @api.route('/', methods=['GET'])
@@ -20,4 +18,4 @@ def index():
 
 
 if __name__ == '__main__':
-    api.run(host='0.0.0.0')
+    api.run(host='0.0.0.0', debug=True)

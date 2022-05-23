@@ -1,38 +1,29 @@
 from abc import ABC, abstractmethod
-from typing import Optional, Union
-from app.users.models import Users
+from typing import Any, Dict, List, Optional
+from app.users.models import User
 
 
-
-class BaseRepositorie(ABC):
+class UserRepository(ABC):
 
     @abstractmethod
-    def get_user(self, pk:int) -> Union[Users, dict]:
+    def get(self, pk: int) -> Optional[User]:
         """Get a single user object"""
 
     @abstractmethod
-    def filter_by_email(self, email: str) -> Union[Users, dict]:
-        """Filter user object by email"""
-
-    @abstractmethod
-    def list_users(self):
+    def list(self) -> List[User]:
         """List all saved users"""
 
-
-class UserRepositorie(BaseRepositorie):
+    @abstractmethod
+    def add(self, data: Dict[str, Any]) -> User:
+        """Create a user object"""
 
     @abstractmethod
-    def create_object(self, user_data: dict):
-        """create a user onject"""
+    def modify(
+        self, pk: int,
+        update_fields: Dict[str, Any]
+    ) -> Optional[User]:
+        """Modify user fields"""
 
     @abstractmethod
-    def update_object(self, user: Users, updated_fields):
-        """update a user object"""
-
-    @abstractmethod
-    def delete_object(self, user: Users):
-        """delete a user object"""
-
-    @abstractmethod
-    def create_access_token(self, user: Users):
-        """create a jwt access token to the given user"""
+    def delete(self, pk: int) -> None:
+        """Deletes a user object"""
