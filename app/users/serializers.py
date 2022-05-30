@@ -1,7 +1,7 @@
 import re
 from . import ma
 from .models import User, Role
-from marshmallow import fields, validates, ValidationError, post_load
+from marshmallow import fields, validates, ValidationError, post_load, Schema
 
 regex_names = r'[\W\d]'
 
@@ -54,3 +54,13 @@ class UserSerializer(ma.SQLAlchemyAutoSchema):
         data.pop('rol')
 
         return data
+
+
+class TokenSerializer(Schema):
+
+    user_id = fields.Integer()
+    access_token = fields.String()
+    refresh_token = fields.String()
+
+    class Meta:
+        ordered = True

@@ -46,7 +46,7 @@ class JWTHandler:
             'kid': uuid4().__str__()
         }
         token = jwt.encode(payload, self._secret, headers=headers)
-        return token
+        return token.decode('utf-8')
 
     def decode(self, token: str) -> Dict[str, Any]:
         headers = jwt.get_unverified_header(token)
@@ -59,3 +59,7 @@ class JWTHandler:
         except (jwt.ExpiredSignatureError, jwt.InvalidSignatureError) as e:
             raise e
 
+    @staticmethod
+    def get_token_headers(token: str) -> Dict[str, Any]:
+        headers = jwt.get_unverified_header(token)
+        return headers
