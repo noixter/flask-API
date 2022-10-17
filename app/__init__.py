@@ -1,18 +1,23 @@
-from . import *
 from flask import Flask
-from .Config import configs
-from app.users import ma, api, db as db_users
+
+from app.users import db as db_users
+from app.users import ma
+
+from . import *  # noqa
+from .config import configs
 
 
-def create_app(environment):
-    app = Flask(__name__, instance_relative_config=True)
+def create_app(env):
+    app = Flask(__name__)
+    environment = configs.get(env)
     app.config.from_object(environment)
     with app.app_context():
         db_users.init_app(app)
         ma.init_app(app)
-        db_users.create_all()
-        from app.users import views
+        from app.users import commands, views
+        db_users.create_all(app=app)
+
     from app.users import users
     app.register_blueprint(users, url_prefix='/users')
-    return app
 
+    return app

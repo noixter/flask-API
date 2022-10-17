@@ -1,22 +1,22 @@
-from typing import Optional, List
+from typing import List, Optional
 
 import jwt
-from marshmallow.exceptions import ValidationError
-
-from app.users.repositories.sqlalchemy_interface import SQLAlchemyUserRepository
-from app.users.services.user_services import UserRestServices
-from . import api, db
 from flask import request
 from flask_restx import Resource
+from marshmallow.exceptions import ValidationError
 
-from .constants import TokenTypes
-from .exceptions import PermissionDenied, NotAuthenticated
-from .permissions import BasePermission, AdminUser, IsOwnUser
-from .serializers import UserSerializer, TokenSerializer
-from .services.auth import JWTAuth
-from .services.base_service import AuthServices
-from ..tests.tools.exceptions import BaseHTTPException
-from ..tools.pyjwt import JWTHandler
+from app.users import api
+from app.users.adapters.repository import (SQLAlchemyRoleRepository,
+                                           SQLAlchemyUserRepository)
+from app.users.serializers import LoginSerializer, UserSerializer
+from shared.tools.exceptions import BaseHTTPException
+from shared.tools.pyjwt import JWTHandler
+from users.constants import TokenTypes
+from users.exceptions import NotAuthenticated, ObjectNotFound, PermissionDenied
+from users.permissions import AdminUser, BasePermission, IsOwnUser
+from users.services.auth import JWTAuth
+from users.services.base import AuthServices
+from users.services.services import JWTLogin, UserServices, create_tokens
 
 
 @api.errorhandler(BaseHTTPException)
@@ -48,13 +48,15 @@ class BaseResource(Resource):
             except ValueError as e:
                 raise NotAuthenticated(message=e.args[0])
 
-        for permission in self.permissions:
-            if not isinstance(permission, BasePermission):
-                raise TypeError(f'{permission} is not a {BasePermission} instance')
-            if permission.has_permission(request.user):
-                break
+        if (
+            request.user
+            and not any([
+                permission.has_permission(request)
+                for permission in self.permissions
+            ])
+        ):
             raise PermissionDenied(
-                f'user is not allowed to perform this action'
+                'user is not allowed to perform this action'
             )
 
         return super().dispatch_request(*args, **kwargs)
@@ -63,27 +65,24 @@ class BaseResource(Resource):
 @api.route('/')
 @api.route('/<int:user_id>')
 class User(BaseResource):
-    """Users Resource
-    methods: GET, POST, PUT, DELETE
-    """
 
-    repository = SQLAlchemyUserRepository(db=db)
-    auth = JWTAuth(repository=repository, jwt=JWTHandler())
-    authentication = [auth]
+    user_repository = SQLAlchemyUserRepository()
+    authentication = [JWTAuth(jwt=JWTHandler())]
     permissions = [AdminUser(), IsOwnUser()]
-    print_serialize_fields = ['id', 'first_name', 'last_name', 'email', 'rol']
+    print_serialize_fields = ['id', 'first_name', 'last_name', 'email', 'role']
     user_serializer = UserSerializer(only=print_serialize_fields)
-    services = UserRestServices(
-        user_repository=repository
+    services = UserServices(
+        user_repository=user_repository,
+        role_repository=SQLAlchemyRoleRepository()
     )
 
     def get(self, user_id=None):
         if not user_id:
-            users = self.services.repository.list()
+            users = self.services.user_repository.list()
             result = self.user_serializer.dump(users, many=True)
             return {'count': len(result), 'users': result}, 200
 
-        user = self.services.repository.get(pk=user_id)
+        user = self.services.user_repository.get(pk=user_id)
         result = self.user_serializer.dump(user)
 
         return result, 200
@@ -92,64 +91,70 @@ class User(BaseResource):
         user_data = request.get_json(force=True)
         self.user_serializer = UserSerializer()
         user_serialize = self.user_serializer.load(user_data)
-        response = self.services.create_object(user_data=user_serialize)
-        return response, 201
+        user = self.services.create_user(user_data=user_serialize)
+        serialize_user = self.user_serializer.dump(user)
+        return serialize_user, 201
 
     def put(self, user_id):
         update_fields = request.get_json(force=True)
         serialize_update_fields = self.user_serializer.load(
             update_fields, partial=True
         )
-        self.services.modify_user(
+        user = self.services.modify_user(
             pk=user_id, update_fields=serialize_update_fields
         )
-        return {'code': 200, 'message': 'updated'}, 200
+        serialize_user = self.user_serializer.dump(user)
+        return {
+            'message': 'updated',
+            'user': serialize_user
+        }, 200
 
     def delete(self, user_id):
-        if request.user.pk == user_id:
+        # Users cannot delete themselves
+        if request.user.id == user_id:  # type: ignore
             raise PermissionDenied('User cannot perform this operation')
-        response = self.services.delete_user(pk=user_id)
-        return response, response.get('code')
+        try:
+            self.services.delete_user(pk=user_id)
+        except ObjectNotFound:
+            raise
+        return {}, 204
 
 
 @api.route('/token')
 class Token(Resource):
 
-    serializer = TokenSerializer
-    service = UserRestServices
-    jwt = JWTHandler
+    serializer = LoginSerializer()
+    service = JWTLogin(
+        repository=SQLAlchemyUserRepository(),
+        token_handler=JWTHandler()
+    )
 
     def post(self):
         data = request.get_json(force=True)
-        serialize = self.serializer().load(data, partial=True)
+        serialize = self.serializer.load(data)
         user_id = serialize.get('user_id')
-        response = self.service.create_tokens(user_id, jwt=self.jwt())
-        serialize_response = self.serializer().dump(response)
-        return serialize_response, 201
+        password = serialize.get('password')
+        response = self.service.login(user_id=user_id, password=password)
+        return response, 201
 
 
 @api.route('/token/refresh')
 class RefreshToken(BaseResource):
 
-    required_fields = ['refresh_token']
-    serializer = TokenSerializer
-    service = UserRestServices
-    jwt = JWTHandler
+    jwt = JWTHandler()
 
     def post(self):
         data = request.get_json(force=True)
-        serialize = self.serializer(only=self.required_fields).load(data, partial=True)
-        refresh_token = serialize.get('refresh_token')
+        refresh_token = data.get('refresh_token')
         headers = self.jwt.get_token_headers(refresh_token)
         if headers.get('typ') == TokenTypes.ACCESS.name.lower():
-            raise NotAuthenticated('Not access token allowed')
+            raise NotAuthenticated('Access token not allowed')
 
         try:
-            payload = self.jwt().decode(refresh_token)
+            payload = self.jwt.decode(refresh_token)
             user_id = payload.get('user_id')
         except (jwt.ExpiredSignatureError, jwt.InvalidSignatureError) as e:
             raise NotAuthenticated(message=e.args[0])
 
-        response = self.service.create_tokens(user_id, self.jwt())
-        serialize_response = self.serializer().dump(response)
-        return serialize_response, 201
+        response = create_tokens(user_id, self.jwt)
+        return response, 201

@@ -1,27 +1,41 @@
 import importlib
+from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import Union, Any, Optional, Dict, TypeVar
+from typing import Any, Dict, Optional, TypeVar, Union
 from uuid import uuid4
 
 import jwt
 from decouple import config
 
+Token = TypeVar('Token', bound=str)
 
-Token = TypeVar('Token')
 
+class TokenHandler(ABC):
 
-class JWTHandler:
-
-    def __init__(
-        self, algorithm: Optional[str] = None,
-        secret: Optional[str] = None
+    @abstractmethod
+    def encode(
+        self, user_id: int,
+        type_: Optional[str] = None,
+        expires_at: Optional[Union[datetime, int]] = None,
+        extra_data: Optional[Dict[str, Any]] = None
     ):
+        """Encode a access token based on users data input"""
+
+    @abstractmethod
+    def decode(self, token: Token) -> Dict[str, str]:
+        """Decode or validate an incoming token"""
+
+
+class JWTHandler(TokenHandler):
+
+    def __init__(self):
         try:
             importlib.import_module('jwt')
         except ImportError:
             raise f'{self.__name__} need a jwt library'
-        self.algorithm = algorithm or config('JWT_ALGORITHM')
-        self._secret = secret or config('SECRET_KEY')
+
+        self.algorithm = config('JWT_ALGORITHM', 'HS256')
+        self._secret = config('SECRET_KEY', 'secretkey')
 
     def encode(
         self,
@@ -55,7 +69,7 @@ class JWTHandler:
                 token, self._secret,
                 algorithms=[headers.get('alg', self.algorithm)]
             )
-            return payload
+            return payload | headers
         except (jwt.ExpiredSignatureError, jwt.InvalidSignatureError) as e:
             raise e
 

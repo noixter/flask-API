@@ -1,11 +1,14 @@
-from werkzeug.exceptions import HTTPException
+from shared.tools.exceptions import BaseHTTPException
 
-from app.tests.tools.exceptions import BaseHTTPException
+
+class ValidationError(BaseHTTPException):
+    status_code = 400
+    default = 'Bad Request'
 
 
 class ObjectNotFound(BaseHTTPException):
     status_code = 404
-    default = 'Bad request'
+    default = 'Not Found'
 
 
 class PermissionDenied(BaseHTTPException):

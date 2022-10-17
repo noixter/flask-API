@@ -1,14 +1,10 @@
-from app import create_app
-from flask import jsonify
 from decouple import config
-from app.Config import configs
+from flask import jsonify
 
+from app import create_app
 
-environment = configs.get('development')
-if config('PRODUCTION', default=False):
-    environment = configs.get('production')
-
-api = create_app(environment)
+env = config('ENVIRONMENT', default='development')
+api = create_app(env)
 
 
 @api.route('/', methods=['GET'])

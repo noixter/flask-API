@@ -1,9 +1,27 @@
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional
-from app.users.models import User
+
+from flask_sqlalchemy import SQLAlchemy
+
+from users.models import Role, User
+
+
+class RoleRepository(ABC):
+
+    db: SQLAlchemy
+
+    @abstractmethod
+    def get(self, id_: int) -> Optional[Role]:
+        ...
+
+    @abstractmethod
+    def add(self, id_: int, name: str) -> Role:
+        ...
 
 
 class UserRepository(ABC):
+
+    db: SQLAlchemy
 
     @abstractmethod
     def get(self, pk: int) -> Optional[User]:
@@ -27,3 +45,7 @@ class UserRepository(ABC):
     @abstractmethod
     def delete(self, pk: int) -> None:
         """Deletes a user object"""
+
+    @abstractmethod
+    def filter_by_email(self, email: str) -> User:
+        """Find a user based on it's email"""
