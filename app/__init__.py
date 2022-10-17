@@ -1,34 +1,23 @@
-from . import *
 from flask import Flask
-from .Config import configs
-from app.users import users, ma, db as users_db
-from app.users.models import BlacklistToken
-from flask_sqlalchemy import SQLAlchemy
-from flask_jwt_extended import JWTManager
+
+from app.users import db as db_users
+from app.users import ma
+
+from . import *  # noqa
+from .config import configs
 
 
-db = SQLAlchemy()
-jwt = JWTManager()
-
-
-# Function callback to evaluate if a token has been revoked
-@jwt.token_in_blacklist_loader
-def check_blacklisted_token(token):
-    blacklisted_token = BlacklistToken.query.filter_by(token=token.get('jti')).first()
-    if blacklisted_token:
-        return True
-    else:
-        return False
-
-
-def create_app(enviroment):
+def create_app(env):
     app = Flask(__name__)
-    app.config.from_object(enviroment)
+    environment = configs.get(env)
+    app.config.from_object(environment)
     with app.app_context():
-        users_db.init_app(app)
+        db_users.init_app(app)
         ma.init_app(app)
-        users_db.create_all()
-    jwt.init_app(app)
-    app.register_blueprint(users)
-    return app
+        from app.users import commands, views
+        db_users.create_all(app=app)
 
+    from app.users import users
+    app.register_blueprint(users, url_prefix='/users')
+
+    return app

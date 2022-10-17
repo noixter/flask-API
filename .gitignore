@@ -5,3 +5,4 @@ __pycache__
 *.sql
 *.db
 .vscode
+.python-version

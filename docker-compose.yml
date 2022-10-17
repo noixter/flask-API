@@ -1,0 +1,39 @@
+version: "3.8"
+
+services:
+  db:
+    image: postgres:13
+    restart: always
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWD}
+      - POSTGRES_DB=${DB_NAME}
+    command: postgres -c log_statement=all
+    ports:
+      - '5432:5432'
+    volumes:
+      - db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+
+  web:
+    build: .
+    env_file:
+      - .env
+    environment:
+      - SECRET_KEY=${SECRET_KEY}
+      - DB_URL=db
+    depends_on:
+      - db
+    ports:
+      - "5000:5000"
+    volumes:
+      - .:/opt/flask_api
+
+volumes:
+  db:
