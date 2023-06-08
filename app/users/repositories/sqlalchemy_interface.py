@@ -1,17 +1,16 @@
+from datetime import datetime, timedelta
 from typing import Union
-from app.users.repositories.base_interface import UserRepositorie
+
+from flask_jwt_extended import create_access_token
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import FlushError, NoResultFound
 
 from app.users.models import Users
+from app.users.repositories.base_interface import UserRepositorie
 
-from datetime import datetime, timedelta
-
-from flask_jwt_extended import create_access_token
 
 class SQLAlchemyUser(UserRepositorie):
-
     def __init__(self, db: SQLAlchemy):
         self.db = db
 
@@ -40,7 +39,7 @@ class SQLAlchemyUser(UserRepositorie):
             user = Users(**user_data)
             self.db.session.add(user)
         except (IntegrityError, FlushError):
-            raise Exception(f'User {user.email} already exists')
+            raise Exception(f"User {user.email} already exists")
         self.db.session.commit()
 
     def update_object(self, user: Users, updated_fields):
@@ -52,10 +51,10 @@ class SQLAlchemyUser(UserRepositorie):
         try:
             self.db.session.delete(user)
         except IntegrityError:
-            raise Exception(f'User {user.email} can not be deleted')
+            raise Exception(f"User {user.email} can not be deleted")
         self.db.session.commit()
 
     def create_access_token(self, user: Users):
         access_token = create_access_token(identity=user.id)
         expires = datetime.timestamp(datetime.now() + timedelta(days=1))
-        return {'access_token': access_token, 'expires': expires}
+        return {"access_token": access_token, "expires": expires}

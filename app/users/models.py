@@ -1,5 +1,6 @@
-from . import db
 from datetime import datetime
+
+from . import db
 
 
 class Role(db.Model):
@@ -12,7 +13,7 @@ class Role(db.Model):
     name = db.Column(db.String, nullable=False)
 
     def __str__(self):
-        return '[{}] {}'.format(self.id, self.name)
+        return "[{}] {}".format(self.id, self.name)
 
 
 class Users(db.Model):
@@ -23,11 +24,11 @@ class Users(db.Model):
     last_name = db.Column(db.String(50), nullable=False)
     email = db.Column(db.String(50), unique=True, nullable=False)
     password = db.Column(db.String(255), nullable=False)
-    rol_id = db.Column(db.Integer, db.ForeignKey('role.id'), nullable=False)
-    rol = db.relationship('Role', backref=db.backref('Users', lazy=True))
+    rol_id = db.Column(db.Integer, db.ForeignKey("role.id"), nullable=False)
+    rol = db.relationship("Role", backref=db.backref("Users", lazy=True))
 
     def __str__(self):
-        return '{} {}'.format(self.first_name, self.last_name)
+        return "{} {}".format(self.first_name, self.last_name)
 
 
 class BlacklistToken(db.Model):
@@ -39,7 +40,7 @@ class BlacklistToken(db.Model):
     user_id = db.Column(db.Integer, nullable=False)
 
     def __str__(self):
-        return '[{}]: {} > {}'.format(self.id, self.user_id, self.expires)
+        return "[{}]: {} > {}".format(self.id, self.user_id, self.expires)
 
     @staticmethod
     def transform_expires_to_date(expires):
@@ -50,5 +51,3 @@ class BlacklistToken(db.Model):
     def add(self):
         db.session.add(self)
         db.session.commit()
-
-

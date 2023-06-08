@@ -5,7 +5,6 @@ from app.users.models import Users
 
 
 class UserServices(ABC):
-
     @abstractmethod
     def retrieve_user(self, pk: int) -> Union[Users, dict]:
         """retrieve a single user object"""
@@ -20,8 +19,8 @@ class UserServices(ABC):
 
     @abstractmethod
     def modify_user(self, pk: int, update_fields: dict) -> Users:
-        """Patch a single user object""" 
-    
+        """Patch a single user object"""
+
     @abstractmethod
     def delete_user(self, pk: int):
         """Delete a single user object"""
@@ -33,4 +32,3 @@ class UserServices(ABC):
     @abstractmethod
     def logout(self) -> dict:
         """logout a user"""
-

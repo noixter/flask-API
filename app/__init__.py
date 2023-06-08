@@ -1,11 +1,13 @@
-from . import *
 from flask import Flask
-from .Config import configs
-from app.users import users, ma, db as users_db
-from app.users.models import BlacklistToken
-from flask_sqlalchemy import SQLAlchemy
 from flask_jwt_extended import JWTManager
+from flask_sqlalchemy import SQLAlchemy
 
+from app.users import db as users_db
+from app.users import ma, users
+from app.users.models import BlacklistToken
+
+from . import *  # noqa
+from .config import configs  # noqa
 
 db = SQLAlchemy()
 jwt = JWTManager()
@@ -14,7 +16,7 @@ jwt = JWTManager()
 # Function callback to evaluate if a token has been revoked
 @jwt.token_in_blacklist_loader
 def check_blacklisted_token(token):
-    blacklisted_token = BlacklistToken.query.filter_by(token=token.get('jti')).first()
+    blacklisted_token = BlacklistToken.query.filter_by(token=token.get("jti")).first()
     if blacklisted_token:
         return True
     else:
@@ -31,4 +33,3 @@ def create_app(enviroment):
     jwt.init_app(app)
     app.register_blueprint(users)
     return app
-

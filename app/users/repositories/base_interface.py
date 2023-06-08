@@ -1,13 +1,12 @@
 from abc import ABC, abstractmethod
-from typing import Optional, Union
+from typing import Union
+
 from app.users.models import Users
 
 
-
-class BaseRepositorie(ABC):
-
+class BaseRepository(ABC):
     @abstractmethod
-    def get_user(self, pk:int) -> Union[Users, dict]:
+    def get_user(self, pk: int) -> Union[Users, dict]:
         """Get a single user object"""
 
     @abstractmethod
@@ -19,8 +18,7 @@ class BaseRepositorie(ABC):
         """List all saved users"""
 
 
-class UserRepositorie(BaseRepositorie):
-
+class UserRepository(BaseRepository):
     @abstractmethod
     def create_object(self, user_data: dict):
         """create a user onject"""

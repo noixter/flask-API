@@ -5,3 +5,5 @@ __pycache__
 *.sql
 *.db
 .vscode
+node_modules
+.mypy_cache
