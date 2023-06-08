@@ -1,14 +1,7 @@
-from datetime import datetime
-
-from . import db
+from app.users import db
 
 
 class Role(db.Model):
-    """Class Role
-    @params: id autoincremental
-    @params: name String
-    """
-
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String, nullable=False)
 
@@ -16,38 +9,24 @@ class Role(db.Model):
         return "[{}] {}".format(self.id, self.name)
 
 
-class Users(db.Model):
-    """Class Users, manage the general users"""
-
+class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     first_name = db.Column(db.String(50), nullable=False)
     last_name = db.Column(db.String(50), nullable=False)
     email = db.Column(db.String(50), unique=True, nullable=False)
     password = db.Column(db.String(255), nullable=False)
-    rol_id = db.Column(db.Integer, db.ForeignKey("role.id"), nullable=False)
-    rol = db.relationship("Role", backref=db.backref("Users", lazy=True))
+    role_id = db.Column(db.Integer, db.ForeignKey("role.id"), nullable=False)
+    role = db.relationship("Role", backref=db.backref("Users", lazy=True))
 
     def __str__(self):
         return "{} {}".format(self.first_name, self.last_name)
 
-
-class BlacklistToken(db.Model):
-    """Token blacklisted model"""
-
-    id = db.Column(db.Integer, primary_key=True)
-    token = db.Column(db.String(255), nullable=False)
-    expires = db.Column(db.Date, nullable=False)
-    user_id = db.Column(db.Integer, nullable=False)
-
-    def __str__(self):
-        return "[{}]: {} > {}".format(self.id, self.user_id, self.expires)
-
-    @staticmethod
-    def transform_expires_to_date(expires):
-        return datetime.fromtimestamp(expires)
-
-    # Manage add to db a token
-
-    def add(self):
-        db.session.add(self)
-        db.session.commit()
+    def to_dict(self):
+        return dict(
+            id=self.id,
+            first_name=self.first_name,
+            last_name=self.last_name,
+            email=self.email,
+            password=self.password,
+            role_id=self.role_id,
+        )
